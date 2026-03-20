@@ -67,11 +67,13 @@ jobs:
         if: always()
         with:
           sarif_file: trivy-frontend.sarif
+          category: trivy-frontend
       - name: Upload backend Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: trivy-backend.sarif
+          category: trivy-backend
 
       - name: Install and lint frontend
         run: |
