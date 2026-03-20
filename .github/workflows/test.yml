@@ -6,7 +6,7 @@ on:
       - dev
   workflow_dispatch:
 env:
-  DOCKER_IMAGE: blessedsoft/linker-app  # Replace with your Docker Hub username and image name
+  DOCKER_IMAGE: blessedsoft/linker-app  # Replace with your_ Docker Hub username and image name
   DOCKER_TAG: ${{ github.sha }}  # Use commit SHA as tag
 
 jobs:
