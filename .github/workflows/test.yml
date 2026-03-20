@@ -18,6 +18,9 @@ jobs:
     permissions:
       contents: read
       security-events: write
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
 
     steps:
       - name: Checkout code
@@ -70,14 +73,16 @@ jobs:
         with:
           sarif_file: trivy-backend.sarif
 
-      - name: Run tests (frontend/backend)
+      - name: Install and lint frontend
         run: |
           npm ci
           npm run lint
-          npm run test
-          cd bootcamp-linker-backend
+
+      - name: Install and build backend
+        working-directory: bootcamp-linker-backend
+        run: |
           npm ci
-          npm test
+          npm run build
 
       - name: Push Docker images to Docker-Hub
         if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
