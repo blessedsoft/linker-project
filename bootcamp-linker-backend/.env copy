@@ -1,0 +1,12 @@
+# Database
+DATABASE_URL="postgresql://postgres:Passw0rd@localhost:5432/DATABASE?schema=public"
+PORT=3001
+# NextAuth
+NEXTAUTH_SECRET="8f19a919f7de67dfcff45f188b1b432f3b76d143ef7306745c72d64dfb8c6015"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Cloudinary (keep your existing values)
+CLOUDINARY_CLOUD_NAME="dcogd4cbi"
+CLOUDINARY_API_KEY="224652221623286"
+CLOUDINARY_API_SECRET="fdMcMEP_X_ixs8BEPNZoWcmJEDg"
+
