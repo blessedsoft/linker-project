@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+  workflow_dispatch:
 env:
   DOCKER_IMAGE: blessedsoft/linker-app  # Replace with your Docker Hub username and image name
   DOCKER_TAG: ${{ github.sha }}  # Use commit SHA as tag
@@ -11,16 +12,29 @@ env:
 jobs:
   build-scan-test-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            bootcamp-linker-backend/package-lock.json
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -43,14 +57,27 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      - name: Run tests
+      - name: Install frontend deps
         run: |
-          # Assuming tests are run via Docker Compose or a script
-          docker-compose up -d  # Start services if needed
+          npm ci
+
+      - name: Lint frontend
+        run: |
+          npm run lint
+
+      - name: Install backend deps
+        working-directory: bootcamp-linker-backend
+        run: |
+          npm ci
+
+      - name: Build backend
+        working-directory: bootcamp-linker-backend
+        run: |
+          npm run build
 
 
       - name: Push Docker image to Docker Hub
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
         run: |
           docker push ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           docker tag ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_IMAGE }}:latest
