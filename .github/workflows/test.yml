@@ -79,7 +79,7 @@ jobs:
           npm ci
           npm test
 
-      - name: Push Docker images to Docker Hub
+      - name: Push Docker images to Docker-Hub
         if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
         run: |
           docker push ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.DOCKER_TAG }}
