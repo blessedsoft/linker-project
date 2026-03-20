@@ -8,8 +8,8 @@ on:
 
 env:
   DOCKER_NAMESPACE: blessedsoft
-  DOCKER_IMAGE_FRONTEND: ${{ env.DOCKER_NAMESPACE }}/linker-frontend
-  DOCKER_IMAGE_BACKEND: ${{ env.DOCKER_NAMESPACE }}/linker-backend
+  DOCKER_IMAGE_FRONTEND: blessedsoft/linker-frontend
+  DOCKER_IMAGE_BACKEND: blessedsoft/linker-backend
   DOCKER_TAG: ${{ github.sha }}
 
 jobs:
