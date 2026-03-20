@@ -63,7 +63,7 @@ jobs:
 
       - name: Lint frontend
         run: |
-          npm run lint -- .
+          npm run lint
 
       - name: Install backend deps
         working-directory: bootcamp-linker-backend
