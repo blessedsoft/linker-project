@@ -16,7 +16,7 @@ jobs:
   build-scan-test-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       security-events: write
     defaults:
       run:
@@ -74,6 +74,19 @@ jobs:
         with:
           sarif_file: trivy-backend.sarif
           category: trivy-backend
+
+      - name: Commit SARIF reports to repo root
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add trivy-frontend.sarif trivy-backend.sarif
+          if git diff --cached --quiet; then
+            echo "No SARIF changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: update trivy sarif reports [skip ci]"
+          git push
 
       - name: Push Docker images to Docker-Hub
         if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
