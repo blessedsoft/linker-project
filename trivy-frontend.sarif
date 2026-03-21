@@ -1420,11 +1420,11 @@
         }
       },
       "properties": {
-        "imageID": "sha256:96766cc25176083ec68096c9e12e38c31ec7dc3f96721c61e5cdf49b1f24adc8",
-        "imageName": "blessedsoft/linker-frontend:0bc3a2dc9537c170a82c24ee222867592b0414f4",
+        "imageID": "sha256:100442791c63b6d2be3a1056c445706ac898be45aa3a63c74af602b32ffa18ce",
+        "imageName": "blessedsoft/linker-frontend:78bcc41d1d1640633d0625afb83e7531a3f44a0f",
         "repoDigests": [],
         "repoTags": [
-          "blessedsoft/linker-frontend:0bc3a2dc9537c170a82c24ee222867592b0414f4",
+          "blessedsoft/linker-frontend:78bcc41d1d1640633d0625afb83e7531a3f44a0f",
           "blessedsoft/linker-frontend:latest"
         ]
       }
