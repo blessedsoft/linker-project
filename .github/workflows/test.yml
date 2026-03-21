@@ -1,0 +1,115 @@
+name: Test CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+env:
+  DOCKER_NAMESPACE: blessedsoft
+  DOCKER_IMAGE_FRONTEND: blessedsoft/linker-frontend
+  DOCKER_IMAGE_BACKEND: blessedsoft/linker-backend
+  DOCKER_TAG: ${{ github.sha }}
+
+jobs:
+  build-scan-test-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+
+      - name: Install frontend deps
+        working-directory: ${{ github.workspace }}
+        run: |
+          npm ci
+
+      - name: Lint frontend
+        working-directory: ${{ github.workspace }}
+        run: |
+          npm run lint
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build frontend image
+        run: |
+          docker build -f Dockerfile -t ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.DOCKER_TAG }} .
+          docker tag ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_IMAGE_FRONTEND }}:latest
+
+      - name: Build backend image
+        working-directory: bootcamp-linker-backend
+        run: |
+          docker build -f Dockerfile -t ${{ env.DOCKER_IMAGE_BACKEND }}:${{ env.DOCKER_TAG }} .
+          docker tag ${{ env.DOCKER_IMAGE_BACKEND }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_IMAGE_BACKEND }}:latest
+
+      - name: Scan frontend image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: image
+          scan-ref: ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.DOCKER_TAG }}
+          format: sarif
+          output: trivy-frontend.sarif
+
+      - name: Scan backend image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: image
+          scan-ref: ${{ env.DOCKER_IMAGE_BACKEND }}:${{ env.DOCKER_TAG }}
+          format: sarif
+          output: trivy-backend.sarif
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-frontend.sarif
+          category: trivy-frontend
+      - name: Upload backend Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-backend.sarif
+          category: trivy-backend
+
+      - name: Commit SARIF reports to repo root
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add trivy-frontend.sarif trivy-backend.sarif
+          if git diff --cached --quiet; then
+            echo "No SARIF changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: update trivy sarif reports [skip ci]"
+          git push
+
+      - name: Push Docker images to Docker-Hub
+        if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+        run: |
+          docker push ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.DOCKER_TAG }}
+          docker push ${{ env.DOCKER_IMAGE_FRONTEND }}:latest
+          docker push ${{ env.DOCKER_IMAGE_BACKEND }}:${{ env.DOCKER_TAG }}
+          docker push ${{ env.DOCKER_IMAGE_BACKEND }}:latest
