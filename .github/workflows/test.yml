@@ -35,10 +35,12 @@ jobs:
             package-lock.json
 
       - name: Install frontend deps
+        working-directory: ${{ github.workspace }}
         run: |
           npm ci
 
       - name: Lint frontend
+        working-directory: ${{ github.workspace }}
         run: |
           npm run lint
 
